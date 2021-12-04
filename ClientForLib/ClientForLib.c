@@ -271,6 +271,8 @@ WndProc(
 						SetWindowText(edits[7 + i], buffer);
 					}
 
+					SetWindowText(edits[9], _T("Success"));
+
 					BTDeleteBinTree(binTreeSearch);
 					free(arr);
 					break;
@@ -322,6 +324,8 @@ WndProc(
 						SetWindowText(edits[7 + i], buffer);
 					}
 
+					SetWindowText(edits[9], _T("Success"));
+
 					BTDeleteBinTree(binTreeSort);
 					free(arr);
 					break;
@@ -365,7 +369,7 @@ _tWinMain(
 	HWND hWnd = CreateWindow(
 		wc.lpszClassName,
 		NULL, WS_OVERLAPPEDWINDOW,
-		700, 300, 340, 460,
+		700, 300, 315, 440,
 		NULL, NULL, hInstance, NULL);
 
 	if (!hWnd)

@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BinarySearchTree", "BinarySearchTree\BinarySearchTree.vcxproj", "{ACB3D4BE-722B-4AE5-9346-57BEBBE5AD76}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ClientForLib", "ClientForLib\ClientForLib.vcxproj", "{291459CA-45F4-4015-A865-7BAFE9A34F8C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{ACB3D4BE-722B-4AE5-9346-57BEBBE5AD76} = {ACB3D4BE-722B-4AE5-9346-57BEBBE5AD76}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -86,7 +86,7 @@ BTInsert(
 	newNode->data = data;
 	newNode->parent = iter2;
 
-	if (data < iter2->data) 
+	if (data < iter2->data)
 		iter2->left = newNode;
 	else
 		iter2->right = newNode;
@@ -114,7 +114,24 @@ BTDelete(
 
 	if (target == *binTree)
 	{
-		*binTree = NULL;
+		if (target->right && target->left)
+		{
+			return EXIT_FAILURE;
+		}
+		else if (target->right && !target->left)
+		{
+			target->right->parent = NULL;
+			*binTree = target->right;
+		}
+		else if (!target->right && target->left)
+		{
+			target->left->parent = NULL;
+			*binTree = target->left;
+		}
+		else
+		{
+			*binTree = NULL;
+		}
 	}
 	else
 	{
