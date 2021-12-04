@@ -86,8 +86,10 @@ BTInsert(
 	newNode->data = data;
 	newNode->parent = iter2;
 
-	if (data < iter2->data) iter2->left = newNode;
-	else iter2->right = newNode;
+	if (data < iter2->data) 
+		iter2->left = newNode;
+	else
+		iter2->right = newNode;
 
 	return EXIT_SUCCESS;
 }
@@ -107,7 +109,6 @@ BTDelete(
 	INT data)
 {
 	PTREE_NODE target = _search(*binTree, data);
-
 	if (!target)
 		return EXIT_FAILURE;
 

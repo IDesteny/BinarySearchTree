@@ -23,12 +23,6 @@ BTInsert(
 	BINARY_TREE binTree,
 	INT data);
 
-VOID
-BTFind(
-	BINARY_TREE binTree,
-	INT data,
-	PBOOL res);
-
 BOOL
 BTDelete(
 	BINARY_TREE binTree,
@@ -39,6 +33,12 @@ BTReplace(
 	BINARY_TREE binTree,
 	INT dataOld,
 	INT dataNew);
+
+VOID
+BTFind(
+	BINARY_TREE binTree,
+	INT data,
+	PBOOL res);
 
 VOID
 BTBypass(
