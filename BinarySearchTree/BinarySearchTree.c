@@ -116,7 +116,10 @@ BTDelete(
 	{
 		if (target->right && target->left)
 		{
-			return EXIT_FAILURE;
+			target->right->parent = _max(target->left);
+			target->right->parent->right = target->right;
+			target->left->parent = NULL;
+			*binTree = target->left;
 		}
 		else if (target->right && !target->left)
 		{
