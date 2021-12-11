@@ -22,7 +22,7 @@
     <ClCompile Include="ClientForLib.c" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="sort.log" />
+    <None Include="main.py" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

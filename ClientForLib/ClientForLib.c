@@ -18,6 +18,17 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #define USER_BUFF 8
 
+#define PATH_PY \
+	_T("C:\\Users\\Ilya\\AppData\\Local\\Programs\\Python\\Python310\\Python.exe \
+		C:\\Users\\Ilya\\source\\repos\\BinarySearchTree\\ClientForLib\\main.py")
+
+#define OpenChartSort() \
+	_tsystem(PATH_PY _T(" sort.log")) == -1
+
+
+#define OpenChartSearch() \
+	_tsystem(PATH_PY _T(" search.log")) == -1
+
 TCHAR binTreeData[32];
 
 BOOL
@@ -105,13 +116,7 @@ OutputFile(
 	}
 
 	CloseHandle(hFileSearch);
-}
-
-BOOL
-OpenChart(
-	VOID)
-{
-	return _tsystem(_T("start cmd")) == -1;
+	return EXIT_SUCCESS;
 }
 
 VOID
@@ -139,7 +144,7 @@ WndProc(
 {
 	static BINARY_TREE binTree;
 	static HWND edits[10];
-	static INT mode = -1;
+	static INT mode = 0;
 
 	switch (message)
 	{
@@ -325,7 +330,7 @@ WndProc(
 
 					SetWindowText(edits[9], _T("Success"));
 
-					mode = 0;
+					mode = 1;
 
 					BTDeleteBinTree(binTreeSearch);
 					free(arr);
@@ -342,19 +347,12 @@ WndProc(
 					}
 
 					INT len = _tstoi(buffer);
-
 					BINARY_TREE binTreeSort = BTCreateBinTree();
-					if (!binTreeSort)
-					{
-						SetWindowText(edits[9], _T("System Error"));
-						break;
-					}
-
 					PINT arr = malloc(len * sizeof(INT));
-					if (!arr)
+
+					if (!(binTreeSort && arr))
 					{
 						SetWindowText(edits[9], _T("System Error"));
-						BTDeleteBinTree(binTreeSort);
 						break;
 					}
 
@@ -380,7 +378,7 @@ WndProc(
 
 					SetWindowText(edits[9], _T("Success"));
 
-					mode = 1;
+					mode = 2;
 
 					BTDeleteBinTree(binTreeSort);
 					free(arr);
@@ -389,7 +387,7 @@ WndProc(
 
 				case BTN_7:
 				{
-					if (mode == -1)
+					if (!mode)
 					{
 						SetWindowText(edits[9], _T("No chart type selected"));
 						break;
@@ -405,27 +403,24 @@ WndProc(
 					INT len = _tstoi(buffer);
 					INT step = len / (len / 10);
 					BINARY_TREE binTreeChart = BTCreateBinTree();
-					PLONGLONG t = malloc(step * sizeof(PLONGLONG));
+					PLONGLONG t = malloc(step * sizeof(LONGLONG));
 
-					if (mode)
+					if (!(binTreeChart && t))
 					{
-						for (INT i = 0; i < step; ++i)
-						{
-							INT correntLen = step * i;
-
-							t[i] = GetTicks();
-							for (INT j = 0; j < correntLen; ++j)
-								BTInsert(binTreeChart, rand());
-							t[i] = GetTicks() - t[i];
-
-							BTDeleteBinTree(binTreeChart);
-						}
-
-						OutputFile(_T("sort.log"), t, step);
+						SetWindowText(edits[9], _T("System Error"));
+						break;
 					}
-					else
+
+					if (mode == 1)
 					{
 						PINT arr = malloc(len * sizeof(INT));
+						if (!arr)
+						{
+							SetWindowText(edits[9], _T("Chart opening error"));
+							free(t);
+							break;
+						}
+
 						BOOL r;
 						INT v;
 
@@ -443,13 +438,55 @@ WndProc(
 							t[i] = GetTicks() - t[i];
 						}
 
-						OutputFile(_T("search.log"), t, step);
+						if (OutputFile(_T("search.log"), t, step))
+						{
+							SetWindowText(edits[9], _T("Error writing to file"));
+							free(t);
+							free(arr);
+							BTDeleteBinTree(binTreeChart);
+							break;
+						}
+
+						if (OpenChartSearch())
+						{
+							SetWindowText(edits[9], _T("Chart opening error"));
+							free(t);
+							free(arr);
+							BTDeleteBinTree(binTreeChart);
+							break;
+						}
 
 						free(arr);
 						BTDeleteBinTree(binTreeChart);
 					}
+					else
+					{
+						for (INT i = 0; i < step; ++i)
+						{
+							INT correntLen = step * i;
 
-					OpenChart();
+							t[i] = GetTicks();
+							for (INT j = 0; j < correntLen; ++j)
+								BTInsert(binTreeChart, rand());
+							t[i] = GetTicks() - t[i];
+
+							BTDeleteBinTree(binTreeChart);
+						}
+
+						if (OutputFile(_T("sort.log"), t, step))
+						{
+							SetWindowText(edits[9], _T("Error writing to file"));
+							free(t);
+							break;
+						}
+
+						if (OpenChartSort())
+						{
+							SetWindowText(edits[9], _T("Chart opening error"));
+							free(t);
+							break;
+						}
+					}
 
 					free(t);
 					

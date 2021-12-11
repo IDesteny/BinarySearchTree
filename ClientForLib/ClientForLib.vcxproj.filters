@@ -4,6 +4,6 @@
     <ClCompile Include="ClientForLib.c" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="sort.log" />
+    <None Include="main.py" />
   </ItemGroup>
 </Project>
