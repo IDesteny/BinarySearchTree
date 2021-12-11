@@ -14,6 +14,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define BTN_4 1004
 #define BTN_5 1005
 #define BTN_6 1006
+#define BTN_7 1007
 
 #define USER_BUFF 8
 
@@ -64,6 +65,55 @@ BubbleSort(
 	}
 }
 
+BOOL
+OutputFile(
+	PCTSTR filename,
+	PLONGLONG ts,
+	INT sz)
+{
+	HANDLE hFileSearch = CreateFile(
+		filename,
+		GENERIC_WRITE,
+		FILE_SHARE_READ,
+		NULL,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL);
+
+	if (!hFileSearch)
+		return EXIT_FAILURE;
+
+	INT n = 0;
+	OVERLAPPED olf = { 0 };
+
+	for (INT i = 0; i < sz; ++i)
+	{
+		TCHAR buff[32];
+		_stprintf_s(buff, ARRAYSIZE(buff), _T("%s\t{ \"x\" : %i, \"y\" : %i }%s"), i ? _T("") : _T("[\n"), i, ts[i], i == sz - 1 ? _T("\n]") : _T(",\n"));
+
+		BOOL r = WriteFile(
+			hFileSearch,
+			buff,
+			lstrlen(buff) * sizeof(TCHAR),
+			&n,
+			&olf);
+
+		olf.Offset += n;
+
+		if (!r)
+			return EXIT_FAILURE;
+	}
+
+	CloseHandle(hFileSearch);
+}
+
+BOOL
+OpenChart(
+	VOID)
+{
+	return _tsystem(_T("start cmd")) == -1;
+}
+
 VOID
 Bypass(
 	INT data)
@@ -89,6 +139,7 @@ WndProc(
 {
 	static BINARY_TREE binTree;
 	static HWND edits[10];
+	static INT mode = -1;
 
 	switch (message)
 	{
@@ -105,7 +156,7 @@ WndProc(
 			edits[6] = CreateWindow(_T("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | ES_CENTER | ES_NUMBER, 10, 250, 70, 30, hWnd, NULL, NULL, NULL);
 			edits[7] = CreateWindow(_T("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | ES_CENTER | ES_READONLY, 90, 290, 95, 30, hWnd, NULL, NULL, NULL);
 			edits[8] = CreateWindow(_T("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | ES_CENTER | ES_READONLY, 90, 330, 95, 30, hWnd, NULL, NULL, NULL);
-			edits[9] = CreateWindow(_T("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | ES_CENTER | ES_READONLY, 10, 370, 280, 20, hWnd, NULL, NULL, NULL);
+			edits[9] = CreateWindow(_T("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | ES_CENTER | ES_READONLY, 10, 410, 280, 20, hWnd, NULL, NULL, NULL);
 
 			CreateWindow(_T("button"), _T("Insert"), WS_CHILD | WS_VISIBLE, 90, 10, 200, 30, hWnd, BTN_0, NULL, NULL);
 			CreateWindow(_T("button"), _T("Delete"), WS_CHILD | WS_VISIBLE, 90, 50, 200, 30, hWnd, BTN_1, NULL, NULL);
@@ -114,6 +165,7 @@ WndProc(
 			CreateWindow(_T("button"), _T("Bypass"), WS_CHILD | WS_VISIBLE, 10, 170, 280, 30, hWnd, BTN_4, NULL, NULL);
 			CreateWindow(_T("button"), _T("Search"), WS_CHILD | WS_VISIBLE, 90, 250, 95, 30, hWnd, BTN_5, NULL, NULL);
 			CreateWindow(_T("button"), _T("Sorting"), WS_CHILD | WS_VISIBLE, 195, 250, 95, 30, hWnd, BTN_6, NULL, NULL);
+			CreateWindow(_T("button"), _T("Open chart"), WS_CHILD | WS_VISIBLE, 10, 370, 280, 30, hWnd, BTN_7, NULL, NULL);
 			break;
 		}
 
@@ -273,6 +325,8 @@ WndProc(
 
 					SetWindowText(edits[9], _T("Success"));
 
+					mode = 0;
+
 					BTDeleteBinTree(binTreeSearch);
 					free(arr);
 					break;
@@ -326,8 +380,79 @@ WndProc(
 
 					SetWindowText(edits[9], _T("Success"));
 
+					mode = 1;
+
 					BTDeleteBinTree(binTreeSort);
 					free(arr);
+					break;
+				}
+
+				case BTN_7:
+				{
+					if (mode == -1)
+					{
+						SetWindowText(edits[9], _T("No chart type selected"));
+						break;
+					}
+
+					TCHAR buffer[USER_BUFF];
+					if (!GetWindowText(edits[6], buffer, USER_BUFF))
+					{
+						SetWindowText(edits[9], _T("Empty line"));
+						break;
+					}
+
+					INT len = _tstoi(buffer);
+					INT step = len / (len / 10);
+					BINARY_TREE binTreeChart = BTCreateBinTree();
+					PLONGLONG t = malloc(step * sizeof(PLONGLONG));
+
+					if (mode)
+					{
+						for (INT i = 0; i < step; ++i)
+						{
+							INT correntLen = step * i;
+
+							t[i] = GetTicks();
+							for (INT j = 0; j < correntLen; ++j)
+								BTInsert(binTreeChart, rand());
+							t[i] = GetTicks() - t[i];
+
+							BTDeleteBinTree(binTreeChart);
+						}
+
+						OutputFile(_T("sort.log"), t, step);
+					}
+					else
+					{
+						PINT arr = malloc(len * sizeof(INT));
+						BOOL r;
+						INT v;
+
+						for (INT i = 0; i < len; ++i)
+						{
+							BTInsert(binTreeChart, arr[i] = rand());
+						}
+
+						for (INT i = 0; i < step; ++i)
+						{
+							v = arr[rand() % (step * (i + 1))];
+
+							t[i] = GetTicks();
+							BTFind(binTreeChart, v, &r);
+							t[i] = GetTicks() - t[i];
+						}
+
+						OutputFile(_T("search.log"), t, step);
+
+						free(arr);
+						BTDeleteBinTree(binTreeChart);
+					}
+
+					OpenChart();
+
+					free(t);
+					
 					break;
 				}
 			}
@@ -369,7 +494,7 @@ _tWinMain(
 	HWND hWnd = CreateWindow(
 		wc.lpszClassName,
 		NULL, WS_OVERLAPPEDWINDOW,
-		700, 300, 315, 440,
+		700, 300, 315, 480,
 		NULL, NULL, hInstance, NULL);
 
 	if (!hWnd)

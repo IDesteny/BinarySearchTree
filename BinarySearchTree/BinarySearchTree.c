@@ -100,7 +100,7 @@ BTFind(
 	INT data,
 	PBOOL res)
 {
-	*res = _search(*binTree, data);
+	*res = !!_search(*binTree, data);
 }
 
 BOOL

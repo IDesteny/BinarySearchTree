@@ -3,4 +3,7 @@
   <ItemGroup>
     <ClCompile Include="ClientForLib.c" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="sort.log" />
+  </ItemGroup>
 </Project>
