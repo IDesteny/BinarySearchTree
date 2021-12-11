@@ -20,7 +20,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #define PATH_PY \
 	_T("C:\\Users\\Ilya\\AppData\\Local\\Programs\\Python\\Python310\\Python.exe \
-		C:\\Users\\Ilya\\source\\repos\\BinarySearchTree\\ClientForLib\\main.py")
+		C:\\Users\\Ilya\\source\\repos\\BinarySearchTree\\ClientForLib\\StartChart.py")
 
 #define OpenChartSort() \
 	_tsystem(PATH_PY _T(" sort.log")) == -1
@@ -488,6 +488,7 @@ WndProc(
 						}
 					}
 
+					SetWindowText(edits[9], _T("Success"));
 					free(t);
 					
 					break;

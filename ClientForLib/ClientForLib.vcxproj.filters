@@ -4,6 +4,6 @@
     <ClCompile Include="ClientForLib.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="main.py" />
+    <None Include="StartChart.py" />
   </ItemGroup>
 </Project>
