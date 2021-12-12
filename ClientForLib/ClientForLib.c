@@ -25,24 +25,35 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define OpenChartSort() \
 	_tsystem(PATH_PY _T(" sort.log")) == -1
 
-
 #define OpenChartSearch() \
 	_tsystem(PATH_PY _T(" search.log")) == -1
 
 TCHAR binTreeData[32];
 
-BOOL
+typedef struct _BENCHMARK
+{
+	LONGLONG binTree;
+	LONGLONG arr;
+
+} BENCHMARK, *PBENCHMARK;
+
+VOID
 BinarySearch(
 	PINT arr,
 	INT size,
-	INT val)
+	INT val,
+	PBOOL res)
 {
 	INT r = size - 1, l = 0, m;
 
 	while (l <= r)
 	{
 		if (val == arr[m = (r + l) >> 1])
-			return TRUE;
+		{
+			*res = TRUE;
+			return;
+		}
+			
 
 		if (arr[m] > val)
 			r = m - 1;
@@ -50,7 +61,7 @@ BinarySearch(
 			l = m + 1;
 	}
 
-	return FALSE;
+	*res = FALSE;
 }
 
 VOID
@@ -79,7 +90,7 @@ BubbleSort(
 BOOL
 OutputFile(
 	PCTSTR filename,
-	PLONGLONG ts,
+	PBENCHMARK pBenchmark,
 	INT sz)
 {
 	HANDLE hFileSearch = CreateFile(
@@ -99,8 +110,8 @@ OutputFile(
 
 	for (INT i = 0; i < sz; ++i)
 	{
-		TCHAR buff[32];
-		_stprintf_s(buff, ARRAYSIZE(buff), _T("%s\t{ \"x\" : %i, \"y\" : %i }%s"), i ? _T("") : _T("[\n"), i, ts[i], i == sz - 1 ? _T("\n]") : _T(",\n"));
+		TCHAR buff[128];
+		_stprintf_s(buff, ARRAYSIZE(buff), _T("%s\t{ \"x\" : %I64d, \"y\" : %I64d }%s"), i ? _T("") : _T("[\n"), pBenchmark[i].binTree, pBenchmark[i].arr, i == sz - 1 ? _T("\n]") : _T(",\n"));
 
 		BOOL r = WriteFile(
 			hFileSearch,
@@ -319,7 +330,7 @@ WndProc(
 					t[0] = GetTicks() - t[0];
 
 					t[1] = GetTicks();
-					BinarySearch(arr, len, val);
+					BinarySearch(arr, len, val, &res);
 					t[1] = GetTicks() - t[1];
 
 					for (INT i = 0; i < 2; ++i)
@@ -401,11 +412,11 @@ WndProc(
 					}
 
 					INT len = _tstoi(buffer);
-					INT step = len / (len / 10);
 					BINARY_TREE binTreeChart = BTCreateBinTree();
-					PLONGLONG t = malloc(step * sizeof(LONGLONG));
+					PBENCHMARK pBenchmark = malloc(len * sizeof(BENCHMARK));
+					PINT arr = malloc(len * sizeof(INT));
 
-					if (!(binTreeChart && t))
+					if (!(arr && pBenchmark && binTreeChart))
 					{
 						SetWindowText(edits[9], _T("System Error"));
 						break;
@@ -413,84 +424,76 @@ WndProc(
 
 					if (mode == 1)
 					{
-						PINT arr = malloc(len * sizeof(INT));
-						if (!arr)
-						{
-							SetWindowText(edits[9], _T("Chart opening error"));
-							free(t);
-							break;
-						}
-
-						BOOL r;
 						INT v;
+						BOOL r;	
+						INT arrLen = 0;
+						INT correntPos = 0;
 
-						for (INT i = 0; i < len; ++i)
+						for (INT i = 0; i < len; ++i, ++correntPos)
 						{
-							BTInsert(binTreeChart, arr[i] = rand());
-						}
+							if (BTInsert(binTreeChart, arr[correntPos] = rand()))
+							{
+								SetWindowText(edits[9], _T("System Error"));
+								free(pBenchmark);
+								free(arr);
+								break;
+							}
 
-						for (INT i = 0; i < step; ++i)
-						{
-							v = arr[rand() % (step * (i + 1))];
+							v = arr[rand() % ++arrLen];
 
-							t[i] = GetTicks();
+							pBenchmark[i].binTree = GetTicks();
 							BTFind(binTreeChart, v, &r);
-							t[i] = GetTicks() - t[i];
+							pBenchmark[i].binTree = GetTicks() - pBenchmark[i].binTree;
+
+							pBenchmark[i].arr = GetTicks();
+							BinarySearch(arr, arrLen, v, &r);
+							pBenchmark[i].arr = GetTicks() - pBenchmark[i].arr;	
 						}
 
-						if (OutputFile(_T("search.log"), t, step))
+						if (OutputFile(_T("search.log"), pBenchmark, len) || OpenChartSearch())
 						{
-							SetWindowText(edits[9], _T("Error writing to file"));
-							free(t);
-							free(arr);
+							SetWindowText(edits[9], _T("System Error"));
 							BTDeleteBinTree(binTreeChart);
+							free(pBenchmark);
+							free(arr);
 							break;
 						}
 
-						if (OpenChartSearch())
-						{
-							SetWindowText(edits[9], _T("Chart opening error"));
-							free(t);
-							free(arr);
-							BTDeleteBinTree(binTreeChart);
-							break;
-						}
-
-						free(arr);
 						BTDeleteBinTree(binTreeChart);
 					}
 					else
 					{
-						for (INT i = 0; i < step; ++i)
+						for (INT i = 0; i < len; ++i)
 						{
-							INT correntLen = step * i;
+							for (INT j = 0; j < i; ++j)
+							{
+								arr[j] = rand();
+							}
 
-							t[i] = GetTicks();
-							for (INT j = 0; j < correntLen; ++j)
-								BTInsert(binTreeChart, rand());
-							t[i] = GetTicks() - t[i];
+							pBenchmark[i].binTree = GetTicks();
+							for (INT j = 0; j < i; ++j)
+								BTInsert(binTreeChart, arr[j]);
+							pBenchmark[i].binTree = GetTicks() - pBenchmark[i].binTree;
+
+							pBenchmark[i].arr = GetTicks();
+							BubbleSort(arr, i);
+							pBenchmark[i].arr = GetTicks() - pBenchmark[i].arr;
 
 							BTDeleteBinTree(binTreeChart);
 						}
 
-						if (OutputFile(_T("sort.log"), t, step))
+						if (OutputFile(_T("sort.log"), pBenchmark, len) || OpenChartSort())
 						{
-							SetWindowText(edits[9], _T("Error writing to file"));
-							free(t);
-							break;
-						}
-
-						if (OpenChartSort())
-						{
-							SetWindowText(edits[9], _T("Chart opening error"));
-							free(t);
+							SetWindowText(edits[9], _T("System Error"));
+							free(pBenchmark);
+							free(arr);
 							break;
 						}
 					}
 
 					SetWindowText(edits[9], _T("Success"));
-					free(t);
-					
+					free(pBenchmark);
+					free(arr);
 					break;
 				}
 			}
